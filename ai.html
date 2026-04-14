@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Darkwood Chronicles — RPG Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0d0b08;
+    --surface:  #181410;
+    --card:     #1f1a14;
+    --border:   #3a2e1e;
+    --border2:  #5a4830;
+    --text:     #e8d9b8;
+    --muted:    #8a7a5e;
+    --accent:   #c4963a;
+    --accent2:  #e6b84a;
+    --red:      #c74040;
+    --green:    #4a9e6a;
+    --blue:     #4a7ec7;
+    --purple:   #8a5ec7;
+    --font-title: 'Cinzel', serif;
+    --font-body:  'Crimson Text', serif;
+
+    /* Back button */
+#back-btn-wrap {
+  text-align: center;
+  margin-top: 1.25rem;
+}
+#back-btn {
+  display: inline-block;
+  font-family: var(--font-title);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 24px;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+#back-btn:hover {
+  color: var(--accent2);
+  border-color: var(--border2);
+  background: var(--surface);
+}
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 0%, #2a1e0a33 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, #ffffff04 40px, #ffffff04 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, #ffffff04 40px, #ffffff04 41px);
+  }
+
+  #game {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* Header */
+  #header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  #header h1 {
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent2);
+    text-shadow: 0 0 30px #c4963a55;
+    margin-bottom: 2px;
+  }
+  #header p {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--font-title);
+    font-size: 11px;
+  }
+
+  /* HUD */
+  #hud {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat-label {
+    font-family: var(--font-title);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .stat-val {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .stat-val.hp  { color: var(--red); }
+  .stat-val.xp  { color: var(--green); }
+  .stat-val.lvl { color: var(--purple); }
+  .stat-val.gold{ color: var(--accent); }
+
+  /* Scene box */
+  #scene-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.4rem;
+    min-height: 160px;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  #scene-title {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  #scene-desc {
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  /* Enemy bar */
+  #scene-enemy {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 14px;
+  }
+  .enemy-name {
+    font-family: var(--font-title);
+    font-size: 14px;
+    color: var(--red);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .enemy-hp-txt {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .hp-bar-wrap {
+    flex: 1;
+    height: 7px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .hp-bar {
+    height: 100%;
+    background: var(--red);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* Inventory pills */
+  #inv-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .inv-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    padding: 2px 10px;
+    color: var(--muted);
+  }
+
+  /* Action buttons */
+  #actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .action-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .action-btn:hover:not(:disabled) {
+    background: var(--surface);
+    border-color: var(--border2);
+  }
+  .action-btn:active:not(:disabled) { transform: scale(0.98); }
+  .action-btn:disabled { opacity: 0.35; cursor: default; }
+  .btn-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* Log */
+  #log-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  #log-box::-webkit-scrollbar { width: 4px; }
+  #log-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .log-line { font-size: 14px; line-height: 1.6; color: var(--muted); }
+  .log-line.good   { color: var(--green); }
+  .log-line.bad    { color: var(--red); }
+  .log-line.info   { color: var(--blue); }
+  .log-line.gold   { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="header">
+    <h1>Darkwood Chronicles</h1>
+    <p>A Text Adventure</p>
+  </div>
+
+  <div id="hud">
+    <div class="stat-card"><div class="stat-label">Level</div><div class="stat-val lvl"  id="s-lvl">1</div></div>
+    <div class="stat-card"><div class="stat-label">HP</div>   <div class="stat-val hp"   id="s-hp">30 / 30</div></div>
+    <div class="stat-card"><div class="stat-label">XP</div>   <div class="stat-val xp"   id="s-xp">0 / 20</div></div>
+    <div class="stat-card"><div class="stat-label">Gold</div> <div class="stat-val gold" id="s-gold">10</div></div>
+  </div>
+
+  <div id="scene-box">
+    <div id="scene-title"></div>
+    <div id="scene-desc"></div>
+    <div id="scene-enemy">
+      <div>
+        <div class="enemy-name" id="enemy-name"></div>
+        <div class="enemy-hp-txt">HP: <span id="enemy-hp-txt"></span></div>
+      </div>
+      <div class="hp-bar-wrap"><div class="hp-bar" id="enemy-hp-bar"></div></div>
+    </div>
+    <div id="inv-row"></div>
+  </div>
+
+  <div id="actions"></div>
+  <div id="log-box"></div>
+
+</div>
+
+<script>
+const G = {
+  player: { hp: 30, maxHp: 30, atk: 6, def: 2, xp: 0, xpNext: 20, level: 1, gold: 10, inventory: [] },
+  enemy: null,
+  state: 'explore',
+  area: 'forest',
+};
+
+const AREAS = {
+  forest: { name: 'Darkwood Forest',  desc: 'Ancient oaks loom overhead. Moonlight barely pierces the canopy. The air smells of pine and old blood.', enemies: ['Goblin','Wolf','Bandit'], next: 'cave' },
+  cave:   { name: 'Shadow Cavern',    desc: 'Dripping stone walls echo with unseen creatures. Your torchlight flickers against jagged rock faces.', enemies: ['Orc','Cave Troll','Bat Swarm'], next: 'castle' },
+  castle: { name: 'Dread Keep',       desc: 'Crumbling battlements rise against a blood-red sky. Undead guards pace the ramparts in silence.', enemies: ['Skeleton Knight','Dark Mage','Wraith'], next: 'forest' },
+};
+
+const ENEMIES = {
+  'Goblin':         { hp:14,  maxHp:14,  atk:4,  def:0, xp:8,  gold:[2,5]  },
+  'Wolf':           { hp:18,  maxHp:18,  atk:5,  def:1, xp:10, gold:[1,3]  },
+  'Bandit':         { hp:20,  maxHp:20,  atk:6,  def:1, xp:12, gold:[4,8]  },
+  'Orc':            { hp:28,  maxHp:28,  atk:8,  def:2, xp:18, gold:[3,7]  },
+  'Cave Troll':     { hp:38,  maxHp:38,  atk:10, def:3, xp:25, gold:[5,10] },
+  'Bat Swarm':      { hp:22,  maxHp:22,  atk:6,  def:0, xp:14, gold:[1,4]  },
+  'Skeleton Knight':{ hp:35,  maxHp:35,  atk:10, def:4, xp:22, gold:[6,12] },
+  'Dark Mage':      { hp:28,  maxHp:28,  atk:13, def:1, xp:28, gold:[8,15] },
+  'Wraith':         { hp:30,  maxHp:30,  atk:11, def:2, xp:30, gold:[5,10] },
+};
+
+const ITEMS = [
+  { name:'Health Potion', icon:'🧪', effect:'heal', val:15, cost:8  },
+  { name:'Iron Sword',    icon:'⚔',  effect:'atk',  val:3,  cost:15 },
+  { name:'Shield',        icon:'🛡',  effect:'def',  val:2,  cost:12 },
+];
+
+function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function log(msg, cls = '') {
+  const box = document.getElementById('log-box');
+  const line = document.createElement('div');
+  line.className = 'log-line' + (cls ? ' ' + cls : '');
+  line.textContent = msg;
+  box.prepend(line);
+  while (box.children.length > 25) box.removeChild(box.lastChild);
+}
+
+function updateHUD() {
+  const p = G.player;
+  document.getElementById('s-lvl').textContent  = p.level;
+  document.getElementById('s-hp').textContent   = p.hp + ' / ' + p.maxHp;
+  document.getElementById('s-xp').textContent   = p.xp + ' / ' + p.xpNext;
+  document.getElementById('s-gold').textContent = p.gold;
+  const row = document.getElementById('inv-row');
+  row.innerHTML = '';
+  p.inventory.forEach(item => {
+    const pill = document.createElement('div');
+    pill.className = 'inv-pill';
+    pill.textContent = item.icon + ' ' + item.name;
+    row.appendChild(pill);
+  });
+}
+
+function setScene(title, desc) {
+  document.getElementById('scene-title').textContent = title;
+  document.getElementById('scene-desc').textContent  = desc;
+}
+
+function setActions(btns) {
+  const box = document.getElementById('actions');
+  box.innerHTML = '';
+  btns.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'action-btn';
+    el.disabled  = !!b.disabled;
+    el.innerHTML = '<span class="btn-icon">' + b.icon + '</span>' + b.label;
+    el.onclick   = b.action;
+    box.appendChild(el);
+  });
+}
+
+function showEnemy(show) {
+  document.getElementById('scene-enemy').style.display = show ? 'flex' : 'none';
+}
+
+function updateEnemyBar() {
+  if (!G.enemy) return;
+  const pct = Math.max(0, (G.enemy.hp / G.enemy.maxHp) * 100);
+  document.getElementById('enemy-hp-bar').style.width = pct + '%';
+  document.getElementById('enemy-hp-txt').textContent  = G.enemy.hp + ' / ' + G.enemy.maxHp;
+  document.getElementById('enemy-name').textContent    = G.enemy.name;
+}
+
+function levelUp() {
+  const p = G.player;
+  while (p.xp >= p.xpNext) {
+    p.xp     -= p.xpNext;
+    p.level++;
+    p.xpNext  = Math.floor(p.xpNext * 1.5);
+    p.atk    += 2;
+    p.def    += 1;
+    p.maxHp  += 8;
+    p.hp      = p.maxHp;
+    log('⬆ Level up! Now level ' + p.level + '. ATK, DEF, and max HP increased!', 'info');
+  }
+}
+
+/* ---- EXPLORE ---- */
+function exploreScene() {
+  G.state = 'explore';
+  showEnemy(false);
+  const area = AREAS[G.area];
+  const roll = rand(1, 10);
+
+  if (roll <= 6) {
+    exploreScene._desc = area.desc + ' Suddenly, a shadow lunges from the darkness!';
+    startCombat(area.enemies[rand(0, area.enemies.length - 1)]);
+    return;
+  }
+
+  setScene(area.name, area.desc);
+
+  if (roll === 7) {
+    const gold = rand(3, 10);
+    G.player.gold += gold;
+    log('Found a hidden chest — ' + gold + ' gold inside!', 'gold');
+    updateHUD();
+  } else if (roll === 8) {
+    const heal = Math.floor(G.player.maxHp * 0.15);
+    G.player.hp = Math.min(G.player.maxHp, G.player.hp + heal);
+    log('Discovered a healing spring. +' + heal + ' HP restored.', 'good');
+    updateHUD();
+  } else {
+    log('The path is quiet. You press deeper into the shadows.', '');
+  }
+
+  setActions([
+    { icon:'🗺', label:'Explore deeper',        action: exploreScene   },
+    { icon:'🏕', label:'Rest (+' + Math.floor(G.player.maxHp * 0.2) + ' HP)', action: rest },
+    { icon:'🛒', label:'Visit merchant',         action: merchantScene  },
+    { icon:'➡', label:'Travel to next area',    action: travelScene    },
+  ]);
+}
+
+function rest() {
+  const heal = Math.floor(G.player.maxHp * 0.2);
+  G.player.hp = Math.min(G.player.maxHp, G.player.hp + heal);
+  log('Rested at camp. Recovered ' + heal + ' HP.', 'good');
+  updateHUD();
+  exploreScene();
+}
+
+function travelScene() {
+  G.area = AREAS[G.area].next;
+  log('You travel to ' + AREAS[G.area].name + '.', 'info');
+  exploreScene();
+}
+
+/* ---- COMBAT ---- */
+let defending = false;
+
+function startCombat(enemyName) {
+  const t  = ENEMIES[enemyName];
+  G.enemy  = { name: enemyName, hp: t.hp, maxHp: t.maxHp, atk: t.atk, def: t.def, xp: t.xp, goldRange: t.gold };
+  G.state  = 'combat';
+  defending = false;
+  showEnemy(true);
+  updateEnemyBar();
+  setScene('Combat — ' + enemyName, 'A ' + enemyName + ' blocks your path, weapon raised and eyes full of menace.');
+  log('Encountered a ' + enemyName + '!', 'bad');
+  setCombatActions();
+}
+
+function setCombatActions() {
+  const hasPot = G.player.inventory.some(i => i.effect === 'heal');
+  setActions([
+    { icon:'⚔',  label:'Attack',               action: playerAttack                  },
+    { icon:'🛡',  label:'Defend (halve damage)',action: playerDefend                  },
+    { icon:'🧪',  label:'Use potion',           action: usePotion, disabled: !hasPot  },
+    { icon:'🏃',  label:'Flee (50% chance)',    action: flee                          },
+  ]);
+}
+
+function playerAttack() {
+  defending = false;
+  const p = G.player, e = G.enemy;
+  const dmg = Math.max(1, rand(p.atk - 2, p.atk + 2) - e.def);
+  e.hp -= dmg;
+  log('You strike ' + e.name + ' for ' + dmg + ' damage.', 'good');
+  updateEnemyBar();
+  if (e.hp <= 0) { victory(); return; }
+  enemyAttack();
+}
+
+function playerDefend() {
+  defending = true;
+  log('You raise your guard, bracing for the blow.', 'info');
+  enemyAttack();
+}
+
+function enemyAttack() {
+  const p = G.player, e = G.enemy;
+  let dmg = Math.max(0, rand(e.atk - 2, e.atk + 2) - p.def - (defending ? Math.floor(e.atk / 2) : 0));
+  p.hp -= dmg;
+  if (dmg > 0) log(e.name + ' hits you for ' + dmg + ' damage!', 'bad');
+  else         log(e.name + ' attacks — you block it completely!', 'info');
+  defending = false;
+  updateHUD();
+  if (p.hp <= 0) { defeat(); return; }
+  setCombatActions();
+}
+
+function usePotion() {
+  const p   = G.player;
+  const idx = p.inventory.findIndex(i => i.effect === 'heal');
+  if (idx === -1) return;
+  const item = p.inventory.splice(idx, 1)[0];
+  p.hp = Math.min(p.maxHp, p.hp + item.val);
+  log('Drank ' + item.name + '. Restored ' + item.val + ' HP.', 'good');
+  updateHUD();
+  enemyAttack();
+}
+
+function flee() {
+  if (rand(1, 2) === 1) {
+    log('You managed to escape into the darkness!', 'info');
+    showEnemy(false);
+    G.state = 'explore';
+    exploreScene();
+  } else {
+    log('Failed to flee! ' + G.enemy.name + ' cuts off your escape!', 'bad');
+    enemyAttack();
+  }
+}
+
+function victory() {
+  const e    = G.enemy;
+  const xp   = e.xp;
+  const gold = rand(e.goldRange[0], e.goldRange[1]);
+  G.player.xp   += xp;
+  G.player.gold += gold;
+  log('Defeated ' + e.name + '! Gained ' + xp + ' XP and ' + gold + ' gold.', 'good');
+  levelUp();
+  updateHUD();
+  showEnemy(false);
+  G.enemy = null;
+  G.state = 'explore';
+  setScene(AREAS[G.area].name, 'The battle is won. You stand over your fallen foe and catch your breath.');
+  setActions([
+    { icon:'🗺', label:'Keep exploring',     action: exploreScene   },
+    { icon:'🏕', label:'Rest here',          action: rest           },
+    { icon:'🛒', label:'Visit merchant',     action: merchantScene  },
+  ]);
+}
+
+function defeat() {
+  G.player.hp = 0;
+  showEnemy(false);
+  setScene('You Have Fallen', 'Darkness closes in. The realm swallows your name... but legends never truly die.');
+  log('You were defeated. Your journey ends here.', 'bad');
+  setActions([
+    { icon:'🔄', label:'Begin a new adventure', action: newGame },
+  ]);
+}
+
+/* ---- MERCHANT ---- */
+function merchantScene() {
+  G.state = 'merchant';
+  showEnemy(false);
+  setScene('Wandering Merchant', 'A hooded figure spreads wares across a mossy stump. "Brave soul — you look like you need supplies."');
+  const btns = ITEMS.map(item => ({
+    icon:     item.icon,
+    label:    item.name + '  (' + item.cost + 'g)',
+    disabled: G.player.gold < item.cost,
+    action:   () => buyItem(item),
+  }));
+  btns.push({ icon:'↩', label:'Leave shop', action: exploreScene });
+  setActions(btns);
+}
+
+function buyItem(item) {
+  if (G.player.gold < item.cost) return;
+  G.player.gold -= item.cost;
+  if (item.effect === 'heal') {
+    G.player.inventory.push({ ...item });
+    log('Purchased ' + item.name + '.', 'gold');
+  } else if (item.effect === 'atk') {
+    G.player.atk += item.val;
+    log('Equipped ' + item.name + '. ATK +' + item.val + '.', 'gold');
+  } else if (item.effect === 'def') {
+    G.player.def += item.val;
+    log('Equipped ' + item.name + '. DEF +' + item.val + '.', 'gold');
+  }
+  updateHUD();
+  merchantScene();
+}
+
+/* ---- NEW GAME ---- */
+function newGame() {
+  G.player   = { hp:30, maxHp:30, atk:6, def:2, xp:0, xpNext:20, level:1, gold:10, inventory:[] };
+  G.enemy    = null;
+  G.state    = 'explore';
+  G.area     = 'forest';
+  document.getElementById('log-box').innerHTML = '';
+  updateHUD();
+  log('A new adventure begins in Darkwood Forest. Steel yourself, traveller.', 'info');
+  exploreScene();
+}
+
+newGame();
+</script>
+<br>
+<a id="back-btn" href="fromscratch.html">← Return to Scratch Page</a>
+</body>
+</html>
